@@ -1,4 +1,4 @@
-const CACHE = 'moodtracker-v3';
+const CACHE = 'moodtracker-v4';
 const ASSETS = [
   './index.html',
   './style.css',

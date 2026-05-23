@@ -833,3 +833,346 @@ function promptInstall() {
     showToast('请用浏览器菜单中的"添加到主屏幕"');
   }
 }
+
+// ──────────────────────── TAB SWITCHING ────────────────────────
+
+function switchTab(tab) {
+  const recordView = document.getElementById('recordView');
+  const statsView = document.getElementById('statsView');
+  const buttons = document.querySelectorAll('.tab-btn');
+
+  buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+
+  if (tab === 'record') {
+    recordView.classList.remove('hidden');
+    statsView.classList.add('hidden');
+  } else {
+    recordView.classList.add('hidden');
+    statsView.classList.remove('hidden');
+    renderStatsView();
+  }
+}
+
+// ──────────────────────── STATS COMPUTATIONS ────────────────────────
+
+function getISOWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getLastCompleteWeek() {
+  const now = new Date();
+  const dayOfWeek = now.getDay() || 7; // Mon=1..Sun=7
+  const daysSinceSunday = dayOfWeek; // Days since last Sunday (end of last complete week)
+  const lastSunday = new Date(now);
+  lastSunday.setDate(now.getDate() - daysSinceSunday);
+  lastSunday.setHours(23, 59, 59, 999);
+  const lastMonday = new Date(lastSunday);
+  lastMonday.setDate(lastSunday.getDate() - 6);
+  lastMonday.setHours(0, 0, 0, 0);
+  return { start: lastMonday, end: lastSunday, weekNum: getISOWeekNumber(lastMonday) };
+}
+
+function generateWeeklyReport() {
+  const { start, end, weekNum } = getLastCompleteWeek();
+  const weekMoods = appData.moods.filter(m => {
+    const t = new Date(m.timestamp);
+    return t >= start && t <= end;
+  });
+
+  if (weekMoods.length < 3) return null;
+
+  const avgScore = Math.round(weekMoods.reduce((s, m) => s + m.score, 0) / weekMoods.length);
+
+  const byDay = {};
+  weekMoods.forEach(m => {
+    const dow = new Date(m.timestamp).getDay();
+    if (!byDay[dow]) byDay[dow] = [];
+    byDay[dow].push(m.score);
+  });
+  let bestDow = -1, worstDow = -1, bestAvg = 0, worstAvg = 100;
+  Object.entries(byDay).forEach(([dow, scores]) => {
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    if (avg > bestAvg) { bestAvg = avg; bestDow = parseInt(dow); }
+    if (avg < worstAvg) { worstAvg = avg; worstDow = parseInt(dow); }
+  });
+  const dowNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  const sortedDays = Object.keys(byDay).map(Number).sort();
+  const halfIdx = Math.floor(sortedDays.length / 2);
+  const firstHalf = sortedDays.slice(0, halfIdx);
+  const secondHalf = sortedDays.slice(halfIdx);
+  const firstAvg = firstHalf.reduce((s, d) => s + byDay[d].reduce((a, b) => a + b, 0) / byDay[d].length, 0) / firstHalf.length;
+  const secondAvg = secondHalf.reduce((s, d) => s + byDay[d].reduce((a, b) => a + b, 0) / byDay[d].length, 0) / secondHalf.length;
+  const diff = Math.round(secondAvg - firstAvg);
+  const trendArrow = diff > 5 ? '↑' : diff < -5 ? '↓' : '→';
+  const trendText = diff > 5 ? '后半周上扬' : diff < -5 ? '后半周回落' : '整体平稳';
+
+  return {
+    weekNum,
+    avgScore,
+    trendArrow,
+    trendText,
+    bestDay: dowNames[bestDow],
+    bestDayScore: Math.round(bestAvg),
+    worstDay: dowNames[worstDow],
+    worstDayScore: Math.round(worstAvg),
+    totalRecords: weekMoods.length,
+  };
+}
+
+function getMonthlyStats(year, month) {
+  const moods = appData.moods.filter(m => {
+    const d = new Date(m.timestamp);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  if (moods.length === 0) return null;
+
+  const avg = Math.round(moods.reduce((s, m) => s + m.score, 0) / moods.length);
+
+  const byDay = {};
+  moods.forEach(m => {
+    const day = new Date(m.timestamp).getDate();
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(m.score);
+  });
+  let bestDay = -1, worstDay = -1, bestAvg = 0, worstAvg = 100;
+  Object.entries(byDay).forEach(([day, scores]) => {
+    const a = scores.reduce((s, v) => s + v, 0) / scores.length;
+    if (a > bestAvg) { bestAvg = a; bestDay = parseInt(day); }
+    if (a < worstAvg) { worstAvg = a; worstDay = parseInt(day); }
+  });
+
+  return { avg, count: moods.length, bestDay, bestDayScore: Math.round(bestAvg), worstDay, worstDayScore: Math.round(worstAvg) };
+}
+
+function getCalendarData() {
+  const now = new Date();
+  const months = [];
+  for (let m = 3; m >= 0; m--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
+
+  return months.map(({ year, month }) => {
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const firstDow = new Date(year, month, 1).getDay();
+    const label = `${month + 1}月`;
+    const days = [];
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = new Date(year, month, day).toDateString();
+      const dayMoods = appData.moods.filter(m => new Date(m.timestamp).toDateString() === dateStr);
+      if (dayMoods.length > 0) {
+        const avg = Math.round(dayMoods.reduce((s, m) => s + m.score, 0) / dayMoods.length);
+        const info = getMoodInfo(avg);
+        days.push({ date: dateStr, score: avg, emoji: info.emoji, color: getScoreColor(avg), count: dayMoods.length });
+      } else {
+        days.push({ date: dateStr, score: null, emoji: null, color: null, count: 0 });
+      }
+    }
+    return { label, year, month, firstDow, totalDays, days };
+  });
+}
+
+function getMoodDistribution() {
+  return moodMap.map(tier => {
+    const midScore = Math.round((tier.min + tier.max) / 2);
+    const count = appData.moods.filter(m => m.score >= tier.min && m.score <= tier.max).length;
+    const percentage = appData.moods.length > 0 ? (count / appData.moods.length * 100) : 0;
+    return {
+      label: tier.label,
+      emoji: tier.emoji,
+      color: getScoreColor(midScore),
+      count,
+      percentage: Math.round(percentage * 10) / 10,
+    };
+  });
+}
+
+function getTimeOfDayStats() {
+  const periods = [
+    { period: '早晨', hours: [5, 6, 7, 8] },
+    { period: '上午', hours: [9, 10, 11] },
+    { period: '下午', hours: [12, 13, 14, 15, 16] },
+    { period: '傍晚', hours: [17, 18, 19, 20] },
+    { period: '夜晚', hours: [21, 22, 23, 0, 1, 2, 3, 4] },
+  ];
+
+  return periods.map(({ period, hours }) => {
+    const group = appData.moods.filter(m => hours.includes(new Date(m.timestamp).getHours()));
+    if (group.length === 0) return { period, avg: null, count: 0, color: null };
+    const avg = Math.round(group.reduce((s, m) => s + m.score, 0) / group.length);
+    return { period, avg, count: group.length, color: getScoreColor(avg) };
+  }).filter(p => p.count > 0);
+}
+
+function getMonthlyTrend(year, month) {
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const results = [];
+  for (let day = 1; day <= totalDays; day++) {
+    const d = new Date(year, month, day);
+    if (d > today) {
+      results.push({ day, avg: null, count: 0, future: true });
+      continue;
+    }
+    const ds = d.toDateString();
+    const dayMoods = appData.moods.filter(m => new Date(m.timestamp).toDateString() === ds);
+    if (dayMoods.length > 0) {
+      const avg = Math.round(dayMoods.reduce((s, m) => s + m.score, 0) / dayMoods.length);
+      results.push({ day, avg, count: dayMoods.length, future: false });
+    } else {
+      results.push({ day, avg: null, count: 0, future: false });
+    }
+  }
+  return results;
+}
+
+// ──────────────────────── STATS RENDERING ────────────────────────
+
+function renderStatsView() {
+  renderWeeklyReport();
+  renderMonthlyOverview();
+  renderCalendarHeatmap();
+  renderMoodDistribution();
+  renderTimeOfDayAnalysis();
+  renderMonthlyTrend();
+}
+
+function renderWeeklyReport() {
+  const report = generateWeeklyReport();
+  const content = document.getElementById('weeklyReportContent');
+  if (!report) {
+    content.innerHTML = '<div class="stats-empty">暂无上周数据，继续记录吧<br><span style="font-size:11px">至少记录3次才会生成周报</span></div>';
+    return;
+  }
+  content.innerHTML = `
+    <div class="report-header">第 ${report.weekNum} 周报告</div>
+    <div class="report-avg">${report.avgScore}</div>
+    <div class="report-trend">${report.trendArrow} ${report.trendText}</div>
+    <div class="report-detail">
+      最佳日：${report.bestDay}（${report.bestDayScore}分）&nbsp;&nbsp;·&nbsp;&nbsp;最低日：${report.worstDay}（${report.worstDayScore}分）<br>
+      共 ${report.totalRecords} 条记录
+    </div>
+  `;
+}
+
+function renderMonthlyOverview() {
+  const now = new Date();
+  const thisMonth = getMonthlyStats(now.getFullYear(), now.getMonth());
+  const lastMonth = getMonthlyStats(now.getFullYear(), now.getMonth() - 1);
+
+  document.getElementById('moAvg').textContent = thisMonth ? thisMonth.avg : '--';
+  document.getElementById('moCount').textContent = thisMonth ? thisMonth.count : '--';
+  document.getElementById('moBest').textContent = thisMonth ? `${thisMonth.bestDay}日` : '--';
+  document.getElementById('moWorst').textContent = thisMonth ? `${thisMonth.worstDay}日` : '--';
+
+  const compareEl = document.getElementById('moCompare');
+  if (thisMonth && lastMonth) {
+    const diff = thisMonth.avg - lastMonth.avg;
+    if (diff > 0) {
+      compareEl.textContent = `相比上月，均分上升了 ${diff} 分，你在慢慢变好`;
+    } else if (diff < 0) {
+      compareEl.textContent = `相比上月，均分回落了 ${Math.abs(diff)} 分，起伏是生活的一部分`;
+    } else {
+      compareEl.textContent = '和上月的状态几乎一样，你在保持自己的节奏';
+    }
+  } else if (thisMonth) {
+    compareEl.textContent = '上月数据不足，无法比较';
+  } else {
+    compareEl.textContent = '';
+  }
+}
+
+function renderCalendarHeatmap() {
+  const months = getCalendarData();
+  const dowLabels = ['日', '一', '二', '三', '四', '五', '六'];
+
+  const dowRow = `<div class="heatmap-dow-row">${dowLabels.map(l => `<span class="heatmap-dow-label">${l}</span>`).join('')}</div>`;
+
+  const html = months.map(month => {
+    const cells = [];
+    // Empty cells before first day
+    for (let i = 0; i < month.firstDow; i++) {
+      cells.push('<div class="heatmap-cell"><div class="heatmap-dot empty"></div></div>');
+    }
+    // Day cells
+    month.days.forEach(day => {
+      if (day.score !== null) {
+        const d = new Date(day.date);
+        const tip = `${d.getMonth() + 1}月${d.getDate()}日: ${day.score}分 ${day.emoji}（${day.count}次）`;
+        cells.push(`<div class="heatmap-cell"><div class="heatmap-dot has-data" style="background:${day.color}" title="${escapeHTML(tip)}"></div></div>`);
+      } else {
+        cells.push('<div class="heatmap-cell"><div class="heatmap-dot" style="background:#e8e2d8"></div></div>');
+      }
+    });
+
+    return `<div class="heatmap-month">
+      <div class="heatmap-month-label">${month.label}</div>
+      ${dowRow}
+      <div class="heatmap-grid">${cells.join('')}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('heatmapContainer').innerHTML = html;
+}
+
+function renderMoodDistribution() {
+  const dist = getMoodDistribution();
+  const maxCount = Math.max(...dist.map(d => d.count), 1);
+
+  const html = dist.map(d => {
+    const barWidth = maxCount > 0 ? (d.count / maxCount * 100) : 0;
+    return `<div class="dist-row">
+      <span class="dist-emoji">${d.emoji}</span>
+      <span class="dist-label">${d.label}</span>
+      <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${barWidth}%;background:${d.color}"></div></div>
+      <span class="dist-count">${d.count}次 (${d.percentage}%)</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('distList').innerHTML = html || '<div class="stats-empty">还没有足够的数据</div>';
+}
+
+function renderTimeOfDayAnalysis() {
+  const periods = getTimeOfDayStats();
+  if (periods.length === 0) {
+    document.getElementById('timeList').innerHTML = '<div class="stats-empty">还没有足够的数据</div>';
+    return;
+  }
+  const html = periods.map(p => {
+    const barWidth = (p.avg / 100) * 100;
+    return `<div class="time-row">
+      <span class="time-label">${p.period}</span>
+      <div class="time-bar-track"><div class="time-bar-fill" style="width:${barWidth}%;background:${p.color}"></div></div>
+      <span class="time-avg">均分 ${p.avg}</span>
+      <span class="time-count">${p.count}次</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('timeList').innerHTML = html;
+}
+
+function renderMonthlyTrend() {
+  const now = new Date();
+  const trend = getMonthlyTrend(now.getFullYear(), now.getMonth());
+
+  if (trend.every(d => d.avg === null && !d.future)) {
+    document.getElementById('trendChart').innerHTML = '<div class="stats-empty">本月还没有记录</div>';
+    return;
+  }
+
+  const barsHtml = trend.map(d => {
+    if (d.future) return '<div class="trend-bar empty" style="height:4px"></div>';
+    if (d.avg === null) return '<div class="trend-bar empty" style="height:4px"></div>';
+    const h = Math.max(8, d.avg * 0.85);
+    const color = getScoreColor(d.avg);
+    return `<div class="trend-bar" style="height:${h}%;background:${color}" title="${d.day}日: ${d.avg}分（${d.count}次）"></div>`;
+  }).join('');
+
+  document.getElementById('trendChart').innerHTML = barsHtml;
+}

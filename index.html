@@ -36,6 +36,12 @@
     <p class="subtitle">记录心绪的每一个瞬间</p>
   </header>
 
+  <nav class="tab-nav" id="tabNav">
+    <button class="tab-btn active" data-tab="record" onclick="switchTab('record')">记录</button>
+    <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">统计</button>
+  </nav>
+
+  <div id="recordView">
   <div class="card" id="todayCard">
     <div class="label">今日心情</div>
     <div class="no-entry" id="noEntry">今日还没记录心情</div>
@@ -68,7 +74,58 @@
 
   <div class="section-title">历史记录</div>
   <div class="history-list" id="historyList"></div>
-</div>
+</div><!-- #recordView -->
+
+<!-- Stats View -->
+<div id="statsView" class="hidden">
+
+  <div class="card report-card" id="weeklyReportCard">
+    <div class="label">上周报告</div>
+    <div class="report-content" id="weeklyReportContent">
+      <div class="stats-empty" id="noWeeklyReport">暂无上周数据，继续记录吧</div>
+    </div>
+  </div>
+
+  <div class="card" id="monthlyOverviewCard">
+    <div class="label">本月概览</div>
+    <div class="overview-grid" id="monthlyOverviewGrid">
+      <div class="overview-stat"><span class="ov-value" id="moAvg">--</span><span class="ov-label">月均分</span></div>
+      <div class="overview-stat"><span class="ov-value" id="moCount">--</span><span class="ov-label">记录次数</span></div>
+      <div class="overview-stat"><span class="ov-value" id="moBest">--</span><span class="ov-label">最佳日</span></div>
+      <div class="overview-stat"><span class="ov-value" id="moWorst">--</span><span class="ov-label">最低日</span></div>
+    </div>
+    <div class="compare-text" id="moCompare"></div>
+  </div>
+
+  <div class="card" id="heatmapCard">
+    <div class="label">心情热力图</div>
+    <div class="heatmap-container" id="heatmapContainer">
+      <div class="stats-empty">还没有足够的数据</div>
+    </div>
+  </div>
+
+  <div class="card" id="distributionCard">
+    <div class="label">心情分布</div>
+    <div class="dist-list" id="distList">
+      <div class="stats-empty">还没有足够的数据</div>
+    </div>
+  </div>
+
+  <div class="card" id="timeCard">
+    <div class="label">时段分析</div>
+    <div class="time-list" id="timeList">
+      <div class="stats-empty">还没有足够的数据</div>
+    </div>
+  </div>
+
+  <div class="card" id="trendCard">
+    <div class="label">本月趋势</div>
+    <div class="chart-row trend-chart-row" id="trendChart">
+      <div class="stats-empty">还没有足够的数据</div>
+    </div>
+  </div>
+
+</div><!-- #statsView -->
 
 <!-- Modal -->
 <div class="modal-overlay hidden" id="moodModal">

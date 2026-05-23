@@ -640,8 +640,316 @@ input[type=range]::-webkit-slider-thumb {
 .history-item:hover .delete-btn { opacity: 1; }
 .delete-btn:hover { color: #c06050; }
 
+/* ─── Tab Navigation ─── */
+
+.tab-nav {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 1px;
+}
+.tab-btn.active {
+  background: rgba(255,255,255,0.7);
+  color: #3d3028;
+  font-weight: 500;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+/* ─── Stats Empty ─── */
+
+.stats-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ─── Weekly Report ─── */
+
+.report-card .report-content {
+  text-align: center;
+}
+.report-header {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3d3028;
+  margin-bottom: 8px;
+}
+.report-avg {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Noto Serif SC', serif;
+  color: #3d3028;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.4);
+}
+.report-trend {
+  font-size: 14px;
+  color: #3d3028;
+  margin: 4px 0;
+}
+.report-detail {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.8;
+}
+
+/* ─── Monthly Overview ─── */
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.overview-stat {
+  background: rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+.ov-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Noto Serif SC', serif;
+  color: #3d3028;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.4);
+}
+.ov-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+.compare-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* ─── Calendar Heatmap ─── */
+
+.heatmap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.heatmap-month {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.heatmap-month-label {
+  font-size: 12px;
+  font-family: 'Noto Serif SC', serif;
+  color: #3d3028;
+  letter-spacing: 1px;
+}
+.heatmap-dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.heatmap-dow-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.heatmap-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heatmap-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #e8e2d8;
+  cursor: default;
+  transition: transform 0.15s ease;
+}
+.heatmap-dot.has-data {
+  cursor: pointer;
+}
+.heatmap-dot.has-data:hover,
+.heatmap-dot.has-data:active {
+  transform: scale(1.5);
+}
+.heatmap-dot.empty {
+  background: transparent;
+}
+
+/* ─── Mood Distribution ─── */
+
+.dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+.dist-emoji { font-size: 16px; flex-shrink: 0; }
+.dist-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 56px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.dist-bar-track {
+  flex: 1;
+  height: 16px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+}
+.dist-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 52px;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+/* ─── Time of Day ─── */
+
+.time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.time-label {
+  font-size: 12px;
+  color: #3d3028;
+  width: 42px;
+  flex-shrink: 0;
+}
+.time-bar-track {
+  flex: 1;
+  height: 18px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.time-bar-fill {
+  height: 100%;
+  border-radius: 9px;
+  transition: width 0.6s ease;
+}
+.time-avg {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3d3028;
+  width: 44px;
+  flex-shrink: 0;
+}
+.time-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+/* ─── Monthly Trend ─── */
+
+.trend-chart-row {
+  height: 130px;
+  padding: 10px 4px 20px;
+  overflow-x: auto;
+  gap: 1px;
+  position: relative;
+}
+.trend-bar {
+  flex: 1;
+  min-width: 6px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.5s ease;
+}
+.trend-bar.empty {
+  background: #e8e2d8;
+  height: 4px;
+}
+.trend-labels {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  gap: 1px;
+}
+.trend-label {
+  flex: 1;
+  min-width: 6px;
+  text-align: center;
+  font-size: 8px;
+  color: var(--text-dim);
+}
+
+/* ─── Click ripple (add to existing) ─── */
+.ripple-bg {
+  animation: rippleBg 0.6s ease-out;
+}
+@keyframes rippleBg {
+  0% { filter: brightness(1.15); }
+  100% { filter: brightness(1); }
+}
+
 @media (max-width: 480px) {
   .modal .mood-display { font-size: 58px; }
   .modal .mood-score { font-size: 40px; }
   .modal { padding: 24px 16px; }
+  .overview-grid { gap: 6px; }
+  .ov-value { font-size: 18px; }
+  .overview-stat { padding: 10px 8px; }
+  .heatmap-dot { width: 10px; height: 10px; }
+  .heatmap-grid { gap: 2px; }
+  .heatmap-dow-row { gap: 2px; }
+  .trend-chart-row { height: 100px; }
+  .dist-label { width: 48px; font-size: 10px; }
+  .dist-count { width: 44px; font-size: 9px; }
 }

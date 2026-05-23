@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>浮生日记</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8816b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="浮生日记">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-layer" id="bgLayer"></div>
+<div class="bg-vignette" id="bgVignette"></div>
+<div class="film-grain" id="filmGrain"></div>
+
+<div class="bg-credit" id="bgCredit">
+  <span class="credit-icon">◈</span>
+  <span class="credit-text" id="creditText"></span>
+</div>
+
+<div class="bg-orb a" id="orbA"></div>
+<div class="bg-orb b" id="orbB"></div>
+<div class="bg-orb c" id="orbC"></div>
+
+<div class="app" id="app">
+  <header class="header">
+    <h1>浮生日记</h1>
+    <p class="subtitle">记录心绪的每一个瞬间</p>
+  </header>
+
+  <div class="card" id="todayCard">
+    <div class="label">今日心情</div>
+    <div class="no-entry" id="noEntry">今日还没记录心情</div>
+    <div class="today-summary hidden" id="todaySummary">
+      <div class="mood-emoji" id="todayEmoji"></div>
+      <div class="info">
+        <div class="avg-score" id="todayAvg"></div>
+        <div class="entries" id="todayEntries"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-record" onclick="showMoodModal()">✦ 记录此刻心情</button>
+
+  <div class="quote-card hidden" id="latestQuote">
+    <div class="scene-tag" id="sceneTag"></div>
+    <div class="quote-text" id="quoteText"></div>
+    <div class="quote-author" id="quoteAuthor"></div>
+    <div class="quote-note hidden" id="quoteNote"></div>
+    <div class="quote-source" id="quoteSource"></div>
+  </div>
+
+  <div class="insight-card hidden" id="insightCard">
+    <div class="insight-emoji" id="insightEmoji"></div>
+    <div class="insight-text" id="insightText"></div>
+  </div>
+
+  <div class="section-title">本周心情轨迹</div>
+  <div class="chart-row" id="weekChart"></div>
+
+  <div class="section-title">历史记录</div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay hidden" id="moodModal">
+  <div class="modal">
+    <div class="mood-display" id="moodEmoji">😐</div>
+    <div class="mood-label" id="moodLabel">平淡如水</div>
+    <div class="mood-score" id="moodScore">50</div>
+    <div class="slider-container">
+      <input type="range" min="0" max="100" value="50" id="moodSlider" oninput="updateMoodDisplay()">
+      <div class="slider-labels">
+        <span>😭</span><span>😢</span><span>😔</span><span>😕</span><span>😐</span>
+        <span>🙂</span><span>😊</span><span>😄</span><span>🤩</span><span>🥳</span>
+      </div>
+    </div>
+    <textarea class="mood-note" id="moodNote" rows="3" maxlength="500" placeholder="" oninput="updateNoteHint()"></textarea>
+    <div class="note-hint" id="noteHint"></div>
+    <button class="btn-submit" onclick="submitMood()">记录心情</button>
+    <button class="btn-cancel" onclick="closeMoodModal()">取消</button>
+  </div>
+</div>
+
+<!-- Settings -->
+<button class="settings-toggle" onclick="toggleSettings()" title="设置">⚙</button>
+<div class="settings-panel hidden" id="settingsPanel">
+  <h3>提醒设置</h3>
+  <label>最小间隔（分钟）</label>
+  <input type="number" id="minInterval" value="90" min="5" max="480">
+  <label>最大间隔（分钟）</label>
+  <input type="number" id="maxInterval" value="240" min="10" max="600">
+  <label>每日提醒次数上限</label>
+  <select id="maxDaily">
+    <option value="3">3 次</option>
+    <option value="5" selected>5 次</option>
+    <option value="8">8 次</option>
+    <option value="12">12 次</option>
+  </select>
+  <button class="btn-submit" style="margin-top:6px" onclick="saveSettings()">保存设置</button>
+  <button class="btn-export" onclick="exportData()">导出数据</button>
+  <button class="btn-export" onclick="promptInstall()" id="btnInstall">添加到主屏幕</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

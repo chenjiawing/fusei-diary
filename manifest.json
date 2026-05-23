@@ -1,0 +1,13 @@
+{
+  "name": "浮生日记 — 情绪记录",
+  "short_name": "浮生日记",
+  "description": "每天记录心情，随机弹出文学金句与世界名景相伴",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fefdf8",
+  "theme_color": "#e8816b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
